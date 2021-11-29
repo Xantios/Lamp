@@ -1,0 +1,24 @@
+{
+  "name": "xantios/lamp",
+  "description": "Simple CLI control for Philips Hue",
+  "type": "project",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Xantios\\Lamp\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Xantios Krugor",
+      "email": "git@xantios.nl"
+    }
+  ],
+  "require": {
+    "symfony/console": "^5.3",
+    "guzzlehttp/guzzle": "^7.4",
+    "symfony/var-dumper": "^5.3",
+    "illuminate/collections": "^8.73",
+    "ext-posix": "*"
+  }
+}
