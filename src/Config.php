@@ -12,15 +12,25 @@ class Config
     public bool $valid;
     public ipv4 $hub;
     public string $username;
+
     private string $path;
+    private array $paths;
 
     public function __construct()
     {
+        $home = posix_getpwuid(posix_getuid())['dir'];
+
+        $this->paths = [
+            $home."/.lamp.json",
+            dirname(__DIR__) . "/config.json",
+            $home."/lamp.json",
+        ];
+
         try {
             $config = $this->readConfig();
 
             $this->valid = true;
-            $this->hub = new ipv4($config->ip);
+            $this->hub = new ipv4($config->hub);
             $this->username = $config->username;
         } catch (JsonException $e) {
             $this->valid = false;
@@ -30,11 +40,16 @@ class Config
         }
     }
 
-    public function store() :bool
+    public function store() :string
     {
         $that = (string)$this;
+
+        if($this->path === "") {
+            $this->path = $this->paths[0];
+        }
+
         file_put_contents($this->path,$that);
-        return true;
+        return $this->path;
     }
 
     /**
@@ -44,7 +59,7 @@ class Config
     {
         $temp = get_object_vars($this);
         foreach($temp as $key => $value) {
-            $temp[$key] = (string)$value;
+            @$temp[$key] = (string)$value;
         }
         return json_encode($temp, JSON_THROW_ON_ERROR);
     }
@@ -59,7 +74,7 @@ class Config
         return $this->hub;
     }
 
-    public function username()
+    public function username(): string
     {
         return $this->username;
     }
@@ -69,14 +84,7 @@ class Config
      */
     private function readConfig(): stdClass
     {
-        $home = posix_getpwuid(posix_getuid())['dir'];
-        $paths = [
-            dirname(__DIR__) . "/config.json",
-            $home."/.lamp.json",
-            $home."/lamp.json",
-        ];
-
-        foreach($paths as $path) {
+        foreach($this->paths as $path) {
             if(file_exists($path)) {
                 $configFile = file_get_contents($path);
                 $this->path = $path;
@@ -84,6 +92,6 @@ class Config
             }
         }
 
-        return new stdClass();
+        throw new \JsonException("File not found",254,null);
     }
 }
