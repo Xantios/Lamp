@@ -2,72 +2,45 @@
 
 namespace Xantios\Lamp\Hue;
 
-use \ArrayAccess;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Xantios\Lamp\Types\ipv4;
-use Xantios\Lamp\Types\TypedArray;
-
-
-class HubConfig {
-
-    public string $name = "";
-    public ipv4 $ip;
-    public bool $available = false;
-    private \GuzzleHttp\Client $apiClient;
-
-    public function __construct(ipv4 $bridgeIp) {
-        $this->ip = $bridgeIp;
-        $this->client = new \GuzzleHttp\Client();
-    }
-
-    public function getIp() :string {
-        return $this->ip;
-    }
-
-    public function setIp($newIp) :bool {
-        $this->ip = $newIp;
-        return true;
-    }
-
-    public function isAvailable() :bool {
-        return $this->available;
-    }   
-
-    private function pingTest() :bool {
-        // 
-    }
-}
 
 class Hub {
 
-    private \GuzzleHttp\Client $client;
+    private Client $client;
     private HubArray $hubs;
 
     public function __construct() {
-        $this->client = new \GuzzleHttp\Client();
-        $this->hubs = $this->search();
+        $this->client = new Client();
     }
 
-    public function get(ipv4 $ip) :HubConfig {
+    public function get(ipv4 $ip) :?HubConfig {
         foreach($this->hubs as $hub) {
-            if((string)$hub->ip == (string)$ip) {
+            if((string)$hub->ip === (string)$ip) {
                 return $hub;
             }
         }
 
-        return [];
+        return null;
     }
 
     public function first() {
         return $this->hubs[0];
     }
 
+    /**
+     * @throws GuzzleException
+     * @throws \JsonException
+     * @throws \Exception
+     */
     public function search() :HubArray {
 
         $out = new HubArray();
 
         // Discovery API returns an array of bridges in your network
         $request = $this->client->get('https://discovery.meethue.com');
-        $data = json_decode((string)$request->getBody());
+        $data = json_decode((string)$request->getBody(), false, 512, JSON_THROW_ON_ERROR);
         
         foreach($data as $item) {
             $out[] = new HubConfig(new ipv4($item->internalipaddress));
@@ -77,6 +50,3 @@ class Hub {
     }
 }
 
-class HubArray extends TypedArray {
-    public string $type = "Xantios\Lamp\Hue\HubConfig";
-}
