@@ -2,9 +2,10 @@
 
 namespace Xantios\Lamp\Hue;
 
+use Xantios\Lamp\Types\ipv4;
+
 class HubConfig
 {
-
     public string $name = "";
     public ipv4 $ip;
     public bool $available = false;
