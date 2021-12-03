@@ -11,10 +11,10 @@ class ApiClient
 
     private Client $client;
 
-    public function __construct(ipv4 $address)
+    public function __construct(ipv4 $address,$username = "")
     {
         $this->client = new Client([
-            'base_uri' => 'http://' . $address . '/api/',
+            'base_uri' => 'http://' . $address . '/api/'.$username."/",
             'timeout' => 5,
             'headers' => [
                 'Content-Type' => 'application/json'
@@ -45,6 +45,36 @@ class ApiClient
             return $apiResponse;
         } catch (\JsonException $e) {
             $apiResponse->setError("Cant parse " . $e->getMessage());
+            return $apiResponse;
+        }
+    }
+
+    public function ls() :ApiResponse {
+        $response = $this->get("lights");
+        $r = new ApiResponse();
+        $r->setData($response);
+        return $response;
+    }
+
+    public function groups() :ApiResponse {
+        $response = $this->get("groups");
+        $r = new ApiResponse();
+        $r->setData($response);
+        return $response;
+    }
+
+    private function get(string $endpoint) :ApiResponse {
+        $apiResponse = new ApiResponse();
+        try {
+            $resp = $this->client->get($endpoint);
+            $data = json_decode((string)$resp->getBody(), false, 512, JSON_THROW_ON_ERROR);
+            $apiResponse->setData($data);
+            return $apiResponse;
+        } catch (GuzzleException $e) {
+            $apiResponse->setError("Cant connect: " . $e->getMessage());
+            return $apiResponse;
+        } catch (\JsonException $e) {
+            $apiResponse->setError("Cant parse json: " . $e->getMessage()." => ".$resp->getBody());
             return $apiResponse;
         }
     }
