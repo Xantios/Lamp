@@ -78,4 +78,22 @@ class ApiClient
             return $apiResponse;
         }
     }
+
+    private function put(string $endpoint,array $data) :ApiResponse {
+        $apiResponse = new ApiResponse();
+        try {
+            $resp = $this->client->put($endpoint,[
+                'body' => json_encode($data, JSON_THROW_ON_ERROR)
+            ]);
+            $data = json_decode((string)$resp->getBody(), false, 512, JSON_THROW_ON_ERROR);
+            $apiResponse->setData($data);
+            return $apiResponse;
+        } catch (\JsonException $e) {
+            $apiResponse->setError("Cant parse json: " . $e->getMessage()." => ".$resp->getBody());
+            return $apiResponse;
+        } catch (GuzzleException $e) {
+            $apiResponse->setError("Cant connect: " . $e->getMessage());
+            return $apiResponse;
+        }
+    }
 }
