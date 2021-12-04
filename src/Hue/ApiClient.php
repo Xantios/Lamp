@@ -63,6 +63,12 @@ class ApiClient
         return $response;
     }
 
+    public function light(int $id,bool $status = false) :ApiResponse {
+        return $this->put("lights/".$id."/state",[
+            'on' => $status
+        ]);
+    }
+
     private function get(string $endpoint) :ApiResponse {
         $apiResponse = new ApiResponse();
         try {
